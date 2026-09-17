@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+.venv/
+venv/
+.vector-lab/
+.isaac-cluster/
+*.log
+*.mp4
+*.sif
+*.tar

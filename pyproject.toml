@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vector-lab"
+version = "0.1.0"
+description = "Vector Lab: bootstrap and deploy reproducible Isaac Lab workloads on Vector's cluster environment."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "vector-lab" }]
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+vector-lab = "vector_lab.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
