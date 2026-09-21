@@ -1,4 +1,4 @@
-"""SLURM output parsing and resource formatting. No Bonecho-specific defaults here."""
+"""SLURM output parsing and resource formatting. No Vector cluster defaults here."""
 
 from __future__ import annotations
 

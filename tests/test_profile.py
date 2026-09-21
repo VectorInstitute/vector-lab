@@ -39,6 +39,7 @@ def test_profile_yaml_roundtrip(tmp_path) -> None:
     assert loaded.apptainer.extra_exec_args == ["--nv", "--containall", "--writable-tmpfs"]
     assert loaded.fingerprints.build_input_fingerprint == "abc"
     assert loaded.scheduler.remote_shell == "login"
+    assert loaded.cluster_type == "vector-slurm"
 
 
 def test_override_preservation(tmp_path) -> None:

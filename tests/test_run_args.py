@@ -1,4 +1,4 @@
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.config.models import bonecho_defaults
 from vector_lab.jobs.args import expand_train_args, resolve_job_spec
 
@@ -7,7 +7,7 @@ def _profile():
     profile = bonecho_defaults()
     profile.remote_user = "alice"
     profile.scratch_dir = "/scratch/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     return profile
 
 

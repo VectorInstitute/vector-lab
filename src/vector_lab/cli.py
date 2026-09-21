@@ -202,6 +202,7 @@ def _dispatch(args: argparse.Namespace, runner: CommandRunner, store: ConfigStor
         )
         runner.emit(f"profile: {profile.name}")
         runner.emit(f"  ssh_alias: {profile.ssh_alias}")
+        runner.emit(f"  cluster_type: {profile.cluster_type}")
         runner.emit(f"  resolved_host: {profile.resolved_host or '(unresolved)'}")
         runner.emit(f"  remote_user: {profile.remote_user or '(probe skipped or failed)'}")
         runner.emit(f"  home_dir: {profile.home_dir or '(unresolved)'}")

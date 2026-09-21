@@ -173,10 +173,14 @@ Interrupted uploads resume. Runtime Python does **not** trigger Docker rebuild.
 
 ## Architecture
 
-`vector-lab` is a laptop CLI: **ClusterProfile** (Bonecho adapter) +
-**ImageProfile** + **JobProfile**. Bonecho details (login-shell SLURM, Apptainer
-module, `--writable-tmpfs`, persistent cache/log binds) are applied
-automatically in generated wrappers. You normally do not interact with them.
+`vector-lab` is a laptop CLI: **ClusterProfile** + **ImageProfile** + **JobProfile**.
+Adapter behavior is selected by ``cluster_type`` (e.g. ``vector-slurm``), not by
+the profile name. Profile name, SSH target (``ssh_alias``), and ``cluster_type``
+are independent — so ``vector-lab onboard bonecho`` loads Bonecho defaults with
+``cluster_type: vector-slurm``, while a custom profile can use the same adapter
+without being listed in source. Login-shell SLURM, Apptainer module,
+`--writable-tmpfs`, and persistent cache/log binds are applied automatically.
+You normally do not interact with them.
 
 Lower-level commands (`setup`, `build`, `push`, `shell`) remain available.
 Most teammates only need onboard / doctor / deploy / run / smoke-test.

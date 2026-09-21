@@ -1,6 +1,6 @@
 import re
 
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.cluster.slurm import parse_sinfo_pipe_table, slurm_time
 from vector_lab.config.models import ClusterProfile, SchedulerConfig, bonecho_defaults
 from vector_lab.jobs.generate import generate_runtime
@@ -15,7 +15,7 @@ def _bonecho_profile() -> ClusterProfile:
     profile.remote_user = "alice"
     profile.home_dir = "/h/alice"
     profile.scratch_dir = "/scratch/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     return profile
 
 

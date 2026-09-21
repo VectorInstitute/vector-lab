@@ -63,7 +63,7 @@ class SetupCommand:
             except Exception:
                 pass
 
-        adapter = adapter_for(profile.name)
+        adapter = adapter_for(profile.cluster_type)
         adapter.apply_unresolved_paths(profile)
         adapter.derive_scratch_paths(profile)
 

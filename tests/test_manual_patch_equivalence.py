@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.config.models import bonecho_defaults
 from vector_lab.jobs.generate import generate_runtime
 
@@ -30,7 +30,7 @@ def test_generated_covers_manual_bonecho_patches() -> None:
     profile = bonecho_defaults()
     profile.remote_user = "alice"
     profile.scratch_dir = "/scratch/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     generated = generate_runtime(profile)
 
     for token in ("set -e", "--nv", "--containall", "--writable-tmpfs", "/workspace/isaaclab/logs:rw"):
