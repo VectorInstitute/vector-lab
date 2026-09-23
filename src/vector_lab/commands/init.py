@@ -5,8 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 from vector_lab.cluster.adapters import adapter_for, apply_generic_path_detection
-from vector_lab.cluster.detect import infer_home, infer_scratch, parse_env_assignments
-from vector_lab.config.models import ClusterProfile, bonecho_defaults
+from vector_lab.cluster.detect import infer_home
+from vector_lab.cluster.discover import discover_scratch, resolve_remote_shell
+from vector_lab.config.models import BUILTIN_PROFILES, ClusterProfile
 from vector_lab.config.store import ConfigStore
 from vector_lab.exec import CommandRunner
 from vector_lab.local.repo import discover_isaac_lab
@@ -14,12 +15,17 @@ from vector_lab.ssh.session import SshSession
 
 
 def build_initial_profile(name: str, ssh_alias: str | None = None) -> ClusterProfile:
+    """Load a built-in profile factory by name, or a blank generic SLURM profile.
+
+    Adapter selection uses ``profile.cluster_type``, never ``profile.name``.
+    """
     alias = ssh_alias or name
-    if name.lower() == "bonecho":
-        profile = bonecho_defaults(ssh_alias=alias)
+    factory = BUILTIN_PROFILES.get(name.lower())
+    if factory is not None:
+        profile = factory(ssh_alias=alias)
         profile.name = name
         return profile
-    return ClusterProfile(name=name, ssh_alias=alias)
+    return ClusterProfile(name=name, ssh_alias=alias, cluster_type="slurm")
 
 
 class InitCommand:
@@ -48,26 +54,29 @@ class InitCommand:
         if resolved.hostname:
             profile.resolved_host = resolved.hostname
 
+        # Decide the shell before anything else: on sites that set up SLURM, Lmod,
+        # and scratch from /etc/profile.d, every later probe is blind without it.
+        session, shell_probe = resolve_remote_shell(profile, session, self.runner)
+        if shell_probe.detail:
+            self.runner.emit(f"[init] remote shell: {profile.scheduler.remote_shell} ({shell_probe.detail})")
+
         who = session.exec("whoami", category="ssh", check=False)
         if not who.skipped and who.returncode == 0:
             profile.remote_user = who.stdout.strip() or profile.remote_user
 
         home_probe = session.exec("printf %s \"$HOME\"", category="ssh", check=False)
-        env_probe = session.exec(
-            "env | grep -E '^(SCRATCH|SCRATCHDIR|SCRATCH_DIR|CSCRATCH)=' || true",
-            category="ssh",
-            check=False,
-        )
         home = None
-        scratch = None
         if not home_probe.skipped and home_probe.returncode == 0:
             home = infer_home(printenv_home=home_probe.stdout)
-        if not env_probe.skipped and env_probe.returncode == 0:
-            env = parse_env_assignments(env_probe.stdout)
-            scratch, _source = infer_scratch(env=env)
+
+        scratch, _source = discover_scratch(
+            session,
+            remote_user=profile.remote_user,
+            home_dir=home or profile.home_dir,
+        )
 
         apply_generic_path_detection(profile, home=home, scratch=scratch)
-        adapter = adapter_for(profile.name)
+        adapter = adapter_for(profile.cluster_type)
         adapter.apply_unresolved_paths(profile)
         adapter.derive_scratch_paths(profile)
 

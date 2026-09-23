@@ -1,4 +1,11 @@
-from vector_lab.cli import build_parser, hoist_global_flags, parse_args
+from vector_lab.cli import (
+    build_parser,
+    format_command_banner,
+    hoist_global_flags,
+    parse_args,
+    resolve_banner_cluster,
+)
+from vector_lab.config.store import ConfigStore
 
 
 def test_parse_doctor_and_global_flags() -> None:
@@ -117,3 +124,35 @@ def test_help_lists_commands() -> None:
         assert name in help_text
     assert "vector-lab" in help_text
     assert "isaac-cluster" not in help_text
+
+
+def test_deploy_banner_is_visible_and_names_the_cluster(tmp_path) -> None:
+    store = ConfigStore(tmp_path)
+    store.set_active("bonecho")
+    args = parse_args(["deploy", "--cluster", "killarney"])
+    banner = format_command_banner(args, store)
+    assert banner.splitlines()[0].startswith("=")
+    assert ">>> deploying isaac-lab-base on Killarney <<<" in banner
+    assert resolve_banner_cluster(args, store) == "killarney"
+
+
+def test_run_banner_uses_task_and_falls_back_to_active_cluster(tmp_path) -> None:
+    store = ConfigStore(tmp_path)
+    store.set_active("killarney")
+    args = parse_args(["run", "--task", "Isaac-Cartpole-v0"])
+    banner = format_command_banner(args, store)
+    assert ">>> running Isaac-Cartpole-v0 on Killarney <<<" in banner
+
+
+def test_onboard_banner_uses_positional_name(tmp_path) -> None:
+    store = ConfigStore(tmp_path)
+    args = parse_args(["onboard", "killarney"])
+    banner = format_command_banner(args, store)
+    assert ">>> onboarding on Killarney <<<" in banner
+
+
+def test_bootstrap_banner_is_local(tmp_path) -> None:
+    store = ConfigStore(tmp_path)
+    args = parse_args(["bootstrap"])
+    banner = format_command_banner(args, store)
+    assert ">>> bootstrapping on this machine <<<" in banner

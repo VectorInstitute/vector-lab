@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from vector_lab.cli import build_parser, parse_args
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.commands.auth import AuthCommand
 from vector_lab.commands.bootstrap import BootstrapCommand
 from vector_lab.commands.deploy import DeployCommand
@@ -40,7 +40,7 @@ def _profile(repo: Path):
     profile.remote_user = "alice"
     profile.scratch_dir = "/scratch/alice"
     profile.home_dir = "/h/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     profile.isaaclab_path = str(repo)
     return profile
 

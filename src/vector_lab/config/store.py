@@ -62,7 +62,16 @@ class ConfigStore:
         if not isinstance(data, dict):
             raise ConfigError(f"profile {path} is not a mapping")
         data.setdefault("name", name)
-        return ClusterProfile.from_dict(data)
+        profile = ClusterProfile.from_dict(data)
+        # Fill missing cluster_type from a built-in template only when the key was
+        # absent on disk (legacy profiles). Adapter selection still uses the field.
+        if "cluster_type" not in data:
+            from vector_lab.config.models import BUILTIN_PROFILES
+
+            factory = BUILTIN_PROFILES.get(profile.name.lower())
+            if factory is not None:
+                profile.cluster_type = factory().cluster_type
+        return profile
 
     def save_profile(self, profile: ClusterProfile) -> Path:
         self.ensure_local()

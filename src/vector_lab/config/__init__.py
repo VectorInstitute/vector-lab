@@ -1,5 +1,6 @@
 from vector_lab.config.models import (
     ApptainerConfig,
+    BUILTIN_PROFILES,
     ClusterPaths,
     ClusterProfile,
     DefaultJob,
@@ -13,6 +14,7 @@ from vector_lab.config.store import ConfigStore
 
 __all__ = [
     "ApptainerConfig",
+    "BUILTIN_PROFILES",
     "ClusterPaths",
     "ClusterProfile",
     "ConfigStore",

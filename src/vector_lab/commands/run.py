@@ -1,4 +1,4 @@
-"""vector-lab run — sync source and submit a Bonecho-compatible SLURM job."""
+"""vector-lab run — sync source and submit a Vector SLURM job."""
 
 from __future__ import annotations
 

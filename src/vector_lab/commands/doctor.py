@@ -322,7 +322,16 @@ class Doctor:
             results.append(
                 CheckResult("Cluster", "GPU partition", Severity.WARNING, "unset", "no default partition")
             )
-        adapter = adapter_for(profile.name)
+        adapter = adapter_for(profile.cluster_type)
+        results.append(
+            CheckResult(
+                "Cluster",
+                "cluster_type",
+                Severity.INFO,
+                "OK",
+                profile.cluster_type or "slurm",
+            )
+        )
         results.append(CheckResult("Cluster", "adapter", Severity.INFO, "OK", adapter.name))
         if profile.scratch_dir:
             results.append(CheckResult("Cluster", "scratch", Severity.INFO, "OK", profile.scratch_dir))

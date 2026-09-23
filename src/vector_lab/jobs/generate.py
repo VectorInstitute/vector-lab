@@ -1,6 +1,6 @@
 """Render inspectable cluster runtime wrappers from a profile.
 
-Templates are generic. Bonecho behavior appears only when the profile/adapter
+Templates are generic. Vector SLURM behavior appears only when the profile/adapter
 supplies login-shell SLURM, Apptainer module, and writable-tmpfs exec flags.
 """
 

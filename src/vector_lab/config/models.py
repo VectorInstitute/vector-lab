@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, fields
 from datetime import datetime, timezone
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 
 def _utcnow_iso() -> str:
@@ -19,7 +19,7 @@ class SchedulerConfig:
 
 @dataclass
 class ApptainerConfig:
-    """Container runtime settings. Bonecho-specific values belong on the Bonecho profile."""
+    """Container runtime settings. Vector SLURM sites set these on the cluster profile."""
 
     module: str | None = None
     command: str = "singularity"
@@ -128,7 +128,8 @@ class JobRecord:
 @dataclass
 class ClusterProfile:
     name: str
-    ssh_alias: str
+    ssh_alias: str  # OpenSSH Host alias / target used to connect
+    cluster_type: str = "slurm"  # behavior implementation: slurm | vector-slurm | ...
     resolved_host: str | None = None
     remote_user: str | None = None
     home_dir: str | None = None
@@ -199,16 +200,19 @@ class ClusterProfile:
 
 
 def bonecho_defaults(*, ssh_alias: str = "bonecho") -> ClusterProfile:
-    """Bonecho adapter defaults. Not used by the generic SLURM layer."""
+    """Built-in Bonecho profile: name/SSH target independent of cluster_type=vector-slurm."""
+    from vector_lab.cluster.adapters import CLUSTER_TYPE_VECTOR_SLURM, VECTOR_SLURM_APPTAINER
+
     return ClusterProfile(
         name="bonecho",
         ssh_alias=ssh_alias,
+        cluster_type=CLUSTER_TYPE_VECTOR_SLURM,
         scheduler=SchedulerConfig(type="slurm", remote_shell="login"),
         apptainer=ApptainerConfig(
-            module="apptainer",
-            command="singularity",
-            writable_mode="writable-tmpfs",
-            extra_exec_args=["--nv", "--containall", "--writable-tmpfs"],
+            module=VECTOR_SLURM_APPTAINER.module,
+            command=VECTOR_SLURM_APPTAINER.command,
+            writable_mode=VECTOR_SLURM_APPTAINER.writable_mode,
+            extra_exec_args=list(VECTOR_SLURM_APPTAINER.extra_exec_args),
         ),
         default_job=DefaultJob(
             partition="a40_b1",
@@ -220,6 +224,12 @@ def bonecho_defaults(*, ssh_alias: str = "bonecho") -> ClusterProfile:
         ),
         image=ImageProfile(name="base", docker_image="isaac-lab-base:latest"),
     )
+
+
+# Built-in profile factories keyed by user-facing profile name (not adapter selection).
+BUILTIN_PROFILES: dict[str, Callable[..., ClusterProfile]] = {
+    "bonecho": bonecho_defaults,
+}
 
 
 def _filter_fields(cls: type, data: Mapping[str, Any]) -> dict[str, Any]:

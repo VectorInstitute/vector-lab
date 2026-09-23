@@ -1,4 +1,4 @@
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.commands.setup import SetupCommand
 from vector_lab.config.models import bonecho_defaults
 from vector_lab.config.store import ConfigStore
@@ -12,7 +12,7 @@ def test_setup_generates_files_and_skips_remote_mkdir_in_dry_run(tmp_path) -> No
     profile = bonecho_defaults()
     profile.remote_user = "alice"
     profile.scratch_dir = "/scratch/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     store.save_profile(profile)
     store.set_active("bonecho")
 

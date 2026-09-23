@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from vector_lab.cluster.adapters import BonechoAdapter
+from vector_lab.cluster.adapters import VectorSlurmAdapter
 from vector_lab.commands.run import RunCommand
 from vector_lab.config.models import bonecho_defaults
 from vector_lab.config.store import ConfigStore
@@ -27,7 +27,7 @@ def _store(tmp_path: Path, repo: Path) -> ConfigStore:
     profile = bonecho_defaults()
     profile.remote_user = "alice"
     profile.scratch_dir = "/scratch/alice"
-    BonechoAdapter().derive_scratch_paths(profile)
+    VectorSlurmAdapter().derive_scratch_paths(profile)
     profile.isaaclab_path = str(repo)
     store.save_profile(profile)
     store.set_active("bonecho")
