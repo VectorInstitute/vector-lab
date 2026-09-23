@@ -10,12 +10,16 @@ from vector_lab.cluster.detect import infer_home, infer_scratch
 CLUSTER_TYPE_SLURM = "slurm"
 CLUSTER_TYPE_VECTOR_SLURM = "vector-slurm"
 
+WRITABLE_TMPFS = "writable-tmpfs"
+# Required by the Isaac Lab container itself, not by any particular site.
+ISAAC_LAB_EXEC_ARGS = ("--nv", "--containall", "--writable-tmpfs")
+
 # Shared Vector Institute Apptainer defaults (Bonecho today; other Vector SLURM sites later).
 VECTOR_SLURM_APPTAINER = ApptainerConfig(
     module="apptainer",
     command="singularity",
-    writable_mode="writable-tmpfs",
-    extra_exec_args=["--nv", "--containall", "--writable-tmpfs"],
+    writable_mode=WRITABLE_TMPFS,
+    extra_exec_args=list(ISAAC_LAB_EXEC_ARGS),
 )
 
 

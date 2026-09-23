@@ -1,190 +1,254 @@
 # vector-lab
 
-Vector Lab is the deployment and bootstrap tool for reproducible Isaac Lab
-workloads on Vector's cluster environment (SSH + SLURM + Apptainer).
+Vector Lab builds and deploys reproducible Isaac Lab workloads to SLURM
+clusters over SSH and Apptainer. It supports both **Bonecho** and
+**Killarney**. Cluster behavior and paths are discovered during onboarding.
 
-You do **not** edit Isaac Lab’s `docker/cluster/` scripts. This CLI generates the
-runtime wrappers, builds and caches the container when needed, syncs source, and
-submits jobs. Local tool state lives in `.vector-lab/` (optional user config:
-`~/.config/vector-lab/`).
+The tool generates its own runtime wrappers; do **not** edit Isaac Lab's
+`docker/cluster/` scripts. Ordinary changes under Isaac Lab's `source/` or
+`scripts/` directories are synchronized per job and do not rebuild the image.
 
-Ordinary Python/source changes do **not** rebuild or re-upload the container.
+This guide uses `<cluster>` where the value is either `bonecho` or
+`killarney`. Operational examples always pass `--cluster` so it is clear where
+the command runs.
 
-## Quick start
+## 1. Build the package
+
+Clone the repository:
 
 ```bash
 git clone <vector-lab-repo>
 cd vector-lab
-
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-
-# configure SSH alias / complete MFA as instructed below
-
-vector-lab onboard bonecho
-vector-lab doctor
-vector-lab deploy
-vector-lab smoke-test --video
 ```
 
-v1 targets **Ubuntu-like Linux** and the **Bonecho** cluster.
+Vector Lab does not require a virtual environment or `pip install`. Source the
+repository setup script once:
 
-## First-time prerequisites
+```bash
+source ./activate.sh
+vector-lab --version
+```
 
-On the laptop:
+To make the command available in every Bash session, add the **absolute** path
+to `~/.bashrc`:
 
-- Python 3.10+
-- `git`, `ssh`, `rsync`
-- Docker on PATH (`/snap/bin/docker` is fine)
-- Apptainer (local conversion)
-- Tens of GiB free disk for the first container conversion
+```bash
+echo 'source /absolute/path/to/vector-lab/activate.sh' >> ~/.bashrc
+source ~/.bashrc
+```
 
-Check what is missing (this **never** runs `sudo`):
+The launcher uses system `python3` and expects Python 3.10+ and PyYAML. On
+Ubuntu, install PyYAML only if the launcher reports it missing:
+
+```bash
+sudo apt install python3-yaml
+```
+
+## 2. Local setup
+
+The laptop needs:
+
+- Python 3.10+, PyYAML, `git`, `ssh`, and `rsync`
+- Docker (`/snap/bin/docker` is supported)
+- Apptainer for local image conversion
+- Approximately 40 GiB of free disk for the first conversion
+
+Inspect local prerequisites. This command reports required actions but never
+runs `sudo`:
 
 ```bash
 vector-lab bootstrap
 ```
 
-If Docker permission is denied:
+If Docker is installed but access is denied:
 
 ```bash
 sudo usermod -aG docker "$USER"
-# log out and back in
+# Log out and back in.
 ```
 
-Keep `docker` as a **supplementary** group. Do not use `newgrp docker`,
-`chmod 666` on the Docker socket, or `sudo` for the whole workflow.
+Keep `docker` as a supplementary group. Do not use `newgrp docker`, run the
+whole workflow with `sudo`, or change the Docker socket to mode `666`.
 
-## Bonecho SSH setup
+### Configure SSH aliases
 
-Add a `Host bonecho` entry to `~/.ssh/config` **yourself**. vector-lab will
-not write that file and will not bypass MFA.
+Vector Lab does not modify `~/.ssh/config` or bypass MFA. Add entries for each
+cluster you use:
 
-```
+```sshconfig
 Host bonecho
-    HostName <login-node>
+    HostName bonecho.vectorinstitute.ai
+    User <your-user>
+    ControlMaster auto
+    ControlPersist 10m
+    ControlPath ~/.ssh/cm-%C
+
+Host killarney
+    HostName killarney.alliancecan.ca
     User <your-user>
     ControlMaster auto
     ControlPersist 10m
     ControlPath ~/.ssh/cm-%C
 ```
 
-Then complete MFA once:
+Authenticate to each cluster once to establish its multiplexed SSH session:
 
 ```bash
-ssh bonecho
-# or
 vector-lab auth bonecho
+vector-lab auth killarney
 ```
 
-If later commands fail with BatchMode / permission denied, the multiplexed
-session expired — run `vector-lab auth bonecho` again.
+If a later command reports BatchMode or authentication failure, rerun
+`vector-lab auth <cluster>`.
 
-## Onboard
+## 3. One-time onboarding and deployment on each cluster
 
-```bash
-vector-lab onboard bonecho
-```
+Onboarding discovers the selected cluster's login-shell requirements, scratch
+path, SLURM GPU partitions, and Apptainer module. It then writes a profile and
+generated wrappers under `.vector-lab/`.
 
 If Isaac Lab is already cloned:
 
 ```bash
-vector-lab onboard bonecho --isaaclab /path/to/IsaacLab
+vector-lab onboard bonecho --isaaclab /absolute/path/to/IsaacLab
+vector-lab onboard killarney --isaaclab /absolute/path/to/IsaacLab
 ```
 
-Onboard checks local tools, finds or clones a **pinned** Isaac Lab commit,
-authenticates SSH, writes the Bonecho profile, generates wrappers, and runs
-doctor. A second run should mostly report READY / SKIPPED.
+Without `--isaaclab`, onboarding finds an existing checkout or offers the
+pinned clone:
 
 ```bash
-vector-lab doctor
+vector-lab onboard bonecho
+vector-lab onboard killarney
 ```
 
-You want `Overall: READY`. Deployment lines may still say NEEDS BUILD until
-`deploy`.
-
-## Deploy
+Verify each profile:
 
 ```bash
-vector-lab deploy --plan    # no multi-GB work
-vector-lab deploy
+vector-lab doctor --cluster bonecho
+vector-lab doctor --cluster killarney
 ```
 
-First deploy can take a long time (Docker build, conversion, ~20 GiB upload).
-Later deploys should skip cached steps:
+The expected result is `Overall: READY`.
 
+Deploy the container separately to every cluster you will use. `--plan` does
+not build, convert, or upload anything:
+
+```bash
+# Bonecho
+vector-lab deploy --cluster bonecho --plan
+vector-lab deploy --cluster bonecho
+
+# Killarney
+vector-lab deploy --cluster killarney --plan
+vector-lab deploy --cluster killarney
 ```
+
+The first deployment builds the Docker image, converts it to an Apptainer
+artifact, and uploads approximately 20 GiB to the selected cluster. The local
+build and conversion are reusable, but the remote artifact must exist on each
+cluster. Interrupted uploads can be resumed by rerunning the same deploy
+command.
+
+Later deployments should normally report:
+
+```text
 Docker build        SKIPPED
 Conversion          cached
 Upload              SKIPPED
 ```
 
-## Run
+Optionally run the acceptance workload on each cluster:
 
 ```bash
-vector-lab run --task Isaac-Cartpole-v0 --video --headless
+vector-lab smoke-test --cluster bonecho --video
+vector-lab smoke-test --cluster killarney --video
 ```
 
-Source is rsynced to a new scratch run directory. The job uses the existing
-remote container.
+## 4. Run jobs
 
-## Monitor
+Always pass `--cluster` to avoid submitting to the wrong active profile.
+
+### Submit
 
 ```bash
-vector-lab status
-vector-lab status <job-id>
-vector-lab logs <job-id>
-vector-lab logs <job-id> --follow
-vector-lab cancel <job-id>
+# Bonecho
+vector-lab run --cluster bonecho \
+  --task Isaac-Cartpole-v0 --video --headless
+
+# Killarney
+vector-lab run --cluster killarney \
+  --task Isaac-Cartpole-v0 --video --headless
 ```
 
-## Videos
+Source is synchronized into a new scratch run directory on the selected
+cluster. The job uses the container deployed in step 3.
+
+Resource settings can be overridden per job:
 
 ```bash
-vector-lab videos
-vector-lab pull-video --latest
+vector-lab run --cluster killarney \
+  --task Isaac-Cartpole-v0 \
+  --partition gpubase_l40s_b1 \
+  --gpu l40s --gpus 1 \
+  --cpus 8 --memory 32G --time 1h \
+  --headless
+```
+
+### Monitor and manage
+
+Use the same cluster for all operations on a job:
+
+```bash
+vector-lab status --cluster <cluster>
+vector-lab status --cluster <cluster> <job-id>
+vector-lab logs --cluster <cluster> <job-id>
+vector-lab logs --cluster <cluster> <job-id> --follow
+vector-lab cancel --cluster <cluster> <job-id>
+```
+
+### Retrieve videos
+
+```bash
+vector-lab videos --cluster <cluster>
+vector-lab pull-video --cluster <cluster> --latest
 ```
 
 ## Caching behavior
 
-| Layer | Cached when | Rebuilds when |
+| Layer | Cached when | Rebuilds or transfers when |
 | --- | --- | --- |
-| Docker image | Dockerfile / compose / env / dependency manifests unchanged | Those inputs change, or the image is missing |
-| Apptainer artifact | Same image digest + converter | Docker image changed |
-| Remote upload | Remote SHA-256 matches local tar | Artifact bytes differ |
-| Runtime source | rsynced per job | Everyday `source/` and `scripts/` edits |
-
-Interrupted uploads resume. Runtime Python does **not** trigger Docker rebuild.
+| Docker image | Docker inputs are unchanged | Dockerfile, compose, environment, or dependency inputs change |
+| Apptainer artifact | Image digest and converter are unchanged | Docker image changes |
+| Remote upload | Selected cluster's checksum matches | Artifact differs or is missing on that cluster |
+| Runtime source | Never treated as image input | Synchronized for every job |
 
 ## Troubleshooting
 
 | Problem | Next step |
 | --- | --- |
-| Docker not installed | Install Docker Engine; `/snap/bin/docker` is fine. |
-| Docker permission denied | `sudo usermod -aG docker $USER`, then logout/login. Not `newgrp`. |
-| Apptainer missing | Install from https://apptainer.org/docs/admin/main/installation.html |
-| SSH alias missing | Add `Host bonecho` to `~/.ssh/config` (see above). Tool will not write it. |
-| MFA / session expired | `vector-lab auth bonecho` |
-| Isaac Lab missing | `vector-lab onboard bonecho` (pinned clone) or `--isaaclab PATH` |
-| Container not on cluster | `vector-lab deploy` |
-| SLURM / partition / Apptainer | `vector-lab doctor` |
-| Upload interrupted | Re-run `vector-lab deploy` |
+| `vector-lab` not found | `source /absolute/path/to/vector-lab/activate.sh` |
+| PyYAML missing | `sudo apt install python3-yaml` |
+| Docker missing | Install Docker Engine; `/snap/bin/docker` is supported |
+| Docker permission denied | Add `$USER` to the `docker` group, then log out and back in |
+| SSH alias missing | Add `Host bonecho` or `Host killarney` to `~/.ssh/config` |
+| MFA session expired | `vector-lab auth <cluster>` |
+| Isaac Lab missing | `vector-lab onboard <cluster> --isaaclab /path/to/IsaacLab` |
+| Container missing remotely | `vector-lab deploy --cluster <cluster>` |
+| SLURM, scratch, or Apptainer issue | `vector-lab doctor --cluster <cluster>` |
+| Upload interrupted | Rerun `vector-lab deploy --cluster <cluster>` |
 
-## Architecture
+## Architecture and lower-level commands
 
-`vector-lab` is a laptop CLI: **ClusterProfile** + **ImageProfile** + **JobProfile**.
-Adapter behavior is selected by ``cluster_type`` (e.g. ``vector-slurm``), not by
-the profile name. Profile name, SSH target (``ssh_alias``), and ``cluster_type``
-are independent — so ``vector-lab onboard bonecho`` loads Bonecho defaults with
-``cluster_type: vector-slurm``, while a custom profile can use the same adapter
-without being listed in source. Login-shell SLURM, Apptainer module,
-`--writable-tmpfs`, and persistent cache/log binds are applied automatically.
-You normally do not interact with them.
+Vector Lab separates the user-facing cluster profile name, SSH alias, and
+cluster implementation. Discovery allows Bonecho and Killarney to use their
+own home paths, scratch paths, modules, and GPU partitions without treating
+either cluster's settings as universal defaults.
 
-Lower-level commands (`setup`, `build`, `push`, `shell`) remain available.
-Most teammates only need onboard / doctor / deploy / run / smoke-test.
+Most users need only `bootstrap`, `auth`, `onboard`, `doctor`, `deploy`, `run`,
+and the monitoring commands. Lower-level commands such as `init`, `setup`,
+`build`, `push`, and `shell` remain available.
 
-Historical acceptance evidence (not install requirements): see
-[docs/KNOWN_GOOD.md](docs/KNOWN_GOOD.md). Fresh-laptop checklist:
+Historical acceptance evidence is in
+[docs/KNOWN_GOOD.md](docs/KNOWN_GOOD.md). The clean-machine checklist is in
 [docs/FRESH_MACHINE_TEST.md](docs/FRESH_MACHINE_TEST.md).

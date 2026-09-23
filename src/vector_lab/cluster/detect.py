@@ -9,11 +9,24 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+SCRATCH_ENV_KEYS = ("SCRATCH", "SCRATCHDIR", "SCRATCH_DIR", "CSCRATCH")
+
+
 @dataclass
 class PathProbe:
     home_dir: str | None
     scratch_dir: str | None
     source: str
+
+
+def candidate_scratch_dirs(*, remote_user: str | None, home_dir: str | None) -> list[str]:
+    """Conventional scratch locations worth testing when no scratch variable is exported."""
+    candidates: list[str] = []
+    if remote_user:
+        candidates.append(f"/scratch/{remote_user}")
+    if home_dir:
+        candidates.append(f"{home_dir.rstrip('/')}/scratch")
+    return list(dict.fromkeys(c for c in candidates if c))
 
 
 def infer_home(*, printenv_home: str = "", pwd_home: str = "", whoami: str = "") -> str | None:
@@ -36,7 +49,7 @@ def infer_scratch(
     Environment keys checked: SCRATCH, SCRATCHDIR, SCRATCH_DIR, CSCRATCH.
     """
     env = env or {}
-    for key in ("SCRATCH", "SCRATCHDIR", "SCRATCH_DIR", "CSCRATCH"):
+    for key in SCRATCH_ENV_KEYS:
         value = (env.get(key) or "").strip()
         if value:
             return value, key

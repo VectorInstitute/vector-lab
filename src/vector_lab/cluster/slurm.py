@@ -53,6 +53,44 @@ def gpu_types_from_gres(gres: str | None) -> list[str]:
     return types
 
 
+USABLE_PARTITION_STATES = {"up", "idle", "mixed", "alloc"}
+
+
+def gpu_capacity(partition: GpuPartition) -> tuple[str | None, int]:
+    """Largest ``type=count`` GPU entry advertised by a partition."""
+    best_type: str | None = None
+    best_count = 0
+    for entry in partition.gpu_types:
+        name, sep, raw = entry.partition("=")
+        if not sep:
+            continue
+        try:
+            count = int(raw)
+        except ValueError:
+            continue
+        if count > best_count:
+            best_type, best_count = name, count
+    return best_type, best_count
+
+
+def select_default_partition(partitions: list[GpuPartition]) -> tuple[str | None, str | None]:
+    """Pick the usable GPU partition advertising the most GPUs, as (partition, gpu_type)."""
+    best: tuple[tuple[int, str], str, str | None] | None = None
+    for part in partitions:
+        if not part.gpu_types:
+            continue
+        state = (part.state or "up").strip().lower()
+        if state and state not in USABLE_PARTITION_STATES:
+            continue
+        gpu_type, count = gpu_capacity(part)
+        key = (count, part.name)
+        if best is None or key > best[0]:
+            best = (key, part.name, gpu_type or part.gpu_types[0])
+    if best is None:
+        return None, None
+    return best[1], best[2]
+
+
 def parse_sinfo_pipe_table(text: str) -> list[GpuPartition]:
     """Parse ``sinfo -h -o '%P|%G|%a'`` output."""
     partitions: list[GpuPartition] = []

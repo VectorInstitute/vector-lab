@@ -23,6 +23,7 @@ from vector_lab.commands.videos import PullVideoCommand, ShellCommand, VideosCom
 from vector_lab.config.store import ConfigStore
 from vector_lab.errors import VectorLabError
 from vector_lab.exec import CommandRunner
+from vector_lab.images.naming import image_stem
 
 
 _GLOBAL_FLAGS_WITH_VALUE = {"--cluster", "--config-dir"}
@@ -178,11 +179,79 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return build_parser().parse_args(hoist_global_flags(raw))
 
 
+_COMMAND_GERUNDS = {
+    "init": "initializing",
+    "setup": "setting up",
+    "doctor": "checking",
+    "bootstrap": "bootstrapping",
+    "onboard": "onboarding",
+    "auth": "authenticating",
+    "deploy": "deploying",
+    "smoke-test": "smoke-testing",
+    "build": "building",
+    "push": "pushing",
+    "run": "running",
+    "status": "checking status",
+    "logs": "fetching logs",
+    "cancel": "canceling",
+    "videos": "listing videos",
+    "pull-video": "pulling video",
+    "shell": "opening shell",
+}
+
+
+def resolve_banner_cluster(args: argparse.Namespace, store: ConfigStore) -> str:
+    """Cluster name for the command banner: --cluster, positional name, then active profile."""
+    command = getattr(args, "command", None)
+    if command == "bootstrap":
+        return "this machine"
+    for attr in ("cluster", "name"):
+        value = getattr(args, attr, None)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return store.get_active() or "(no cluster selected)"
+
+
+def format_command_banner(args: argparse.Namespace, store: ConfigStore) -> str:
+    """Loud first-line banner: what is running, and on which cluster."""
+    command = args.command or "command"
+    verb = _COMMAND_GERUNDS.get(command, command)
+    cluster = resolve_banner_cluster(args, store)
+    if cluster[0].isupper() or cluster.startswith("(") or " " in cluster:
+        display_cluster = cluster
+    else:
+        display_cluster = cluster.title()
+    subject = _banner_subject(args)
+    if subject:
+        body = f"{verb} {subject} on {display_cluster}"
+    else:
+        body = f"{verb} on {display_cluster}"
+    width = max(72, len(body) + 8)
+    bar = "=" * width
+    return f"{bar}\n>>> {body} <<<\n{bar}"
+
+
+def _banner_subject(args: argparse.Namespace) -> str | None:
+    command = args.command
+    if command in {"deploy", "push", "build"}:
+        return image_stem(getattr(args, "image_profile", None) or "base")
+    if command == "run":
+        return getattr(args, "task", None)
+    if command == "logs":
+        return getattr(args, "job_id", None)
+    if command == "cancel":
+        return getattr(args, "job_id", None)
+    if command == "status":
+        return getattr(args, "job_id", None)
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         args = parse_args(argv)
         runner = CommandRunner(dry_run=args.dry_run, verbose=args.verbose)
         store = ConfigStore.locate(explicit=args.config_dir)
+        runner.emit(format_command_banner(args, store))
         return _dispatch(args, runner, store)
     except VectorLabError as exc:
         print(exc.format_report(), file=sys.stderr)

@@ -5,7 +5,7 @@ Assume:
 - Ubuntu-like laptop
 - no existing `vector-lab` state
 - no Isaac Lab clone
-- a working Bonecho account
+- a working Bonecho or Killarney account
 
 Do **not** treat this as a script to run unattended. Several steps are
 intentionally manual.
@@ -13,18 +13,18 @@ intentionally manual.
 ## Procedure
 
 1. Clone vector-lab and `cd` into it.
-2. `python3 -m venv .venv && source .venv/bin/activate`
-3. `pip install -e .`
-4. `vector-lab bootstrap` (and `bootstrap --install` only to print commands)
-5. Configure SSH alias in `~/.ssh/config` if needed (tool will not write it)
-6. Authenticate / MFA: `ssh bonecho` or `vector-lab auth bonecho`
-7. `vector-lab onboard bonecho`
-8. `vector-lab doctor` — expect `Overall: READY` (deploy lines may still need build)
-9. `vector-lab deploy` — first time is expensive
-10. `vector-lab smoke-test --video`
+2. `source ./activate.sh` (no virtual environment or package install).
+3. Optionally add `source /absolute/path/to/vector-lab/activate.sh` to `~/.bashrc`.
+4. `vector-lab bootstrap` (and `bootstrap --install` only to print commands).
+5. Configure the cluster SSH alias in `~/.ssh/config` (tool will not write it).
+6. Authenticate / MFA: `vector-lab auth <cluster>`.
+7. `vector-lab onboard <cluster>`.
+8. `vector-lab doctor --cluster <cluster>` — expect `Overall: READY`.
+9. `vector-lab deploy --cluster <cluster>` — first time is expensive.
+10. `vector-lab smoke-test --cluster <cluster> --video`.
 11. Verify job `COMPLETED` / ExitCode `0:0`
-12. Verify an MP4 exists (`vector-lab videos` / `pull-video --latest`)
-13. Re-run `vector-lab onboard bonecho` and `vector-lab deploy --plan` (or deploy) and confirm SKIPPED / READY / checksum match (idempotency)
+12. Verify an MP4 exists with `vector-lab videos --cluster <cluster>`.
+13. Re-run `vector-lab onboard <cluster>` and `vector-lab deploy --cluster <cluster> --plan` and confirm SKIPPED / READY / checksum match.
 
 ## Intentionally manual
 

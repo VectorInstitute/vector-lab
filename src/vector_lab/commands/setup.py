@@ -6,7 +6,13 @@ import shlex
 from pathlib import Path
 
 from vector_lab.cluster.adapters import adapter_for
-from vector_lab.cluster.discover import apply_discovery, discover_apptainer, discover_partitions
+from vector_lab.cluster.discover import (
+    apply_discovery,
+    discover_apptainer,
+    discover_partitions,
+    discover_scratch,
+    resolve_remote_shell,
+)
 from vector_lab.commands.init import InitCommand
 from vector_lab.config.models import ClusterProfile
 from vector_lab.config.store import ConfigStore
@@ -63,15 +69,31 @@ class SetupCommand:
             except Exception:
                 pass
 
-        adapter = adapter_for(profile.cluster_type)
-        adapter.apply_unresolved_paths(profile)
-        adapter.derive_scratch_paths(profile)
-
         session = SshSession(
             profile.ssh_alias,
             self.runner,
             login_shell=profile.scheduler.remote_shell == "login",
         )
+        session, shell_probe = resolve_remote_shell(profile, session, self.runner)
+        if shell_probe.detail:
+            self.runner.emit(
+                f"[setup] remote shell: {profile.scheduler.remote_shell} ({shell_probe.detail})"
+            )
+
+        if not profile.scratch_dir:
+            found, source = discover_scratch(
+                session,
+                remote_user=profile.remote_user,
+                home_dir=profile.home_dir,
+            )
+            if found:
+                profile.scratch_dir = found
+                self.runner.emit(f"[setup] scratch discovered via {source}: {found}")
+
+        adapter = adapter_for(profile.cluster_type)
+        adapter.apply_unresolved_paths(profile)
+        adapter.derive_scratch_paths(profile)
+
         partitions = discover_partitions(session)
         apptainer = discover_apptainer(session, module=profile.apptainer.module)
         apply_discovery(profile, partitions, apptainer)
