@@ -17,7 +17,7 @@ the command runs.
 Clone the repository:
 
 ```bash
-git clone <vector-lab-repo>
+git clone git@github.com:VectorInstitute/vector-lab.git
 cd vector-lab
 ```
 
