@@ -12,6 +12,7 @@ from vector_lab.commands.bootstrap import BootstrapCommand
 from vector_lab.commands.build import BuildCommand
 from vector_lab.commands.deploy import DeployCommand
 from vector_lab.commands.doctor import Doctor, format_doctor_report
+from vector_lab.commands.gui import GuiCommand
 from vector_lab.commands.init import InitCommand
 from vector_lab.commands.onboard import OnboardCommand
 from vector_lab.commands.ops import CancelCommand, LogsCommand, StatusCommand
@@ -156,6 +157,36 @@ def build_parser() -> argparse.ArgumentParser:
         help="Extra argument passed through to train.py (repeatable).",
     )
 
+    gui = sub.add_parser(
+        "gui",
+        help="Submit an Isaac Sim GUI session and print the noVNC SSH tunnel.",
+    )
+    gui.add_argument("--image-profile", default=None, help="Container profile (default: from cluster profile).")
+    gui.add_argument("--partition", help="SLURM partition override")
+    gui.add_argument("--gpu", help="GPU type, e.g. a40")
+    gui.add_argument("--gpus", type=int, help="GPU count")
+    gui.add_argument("--gres", help="Full SLURM GRES string, e.g. gpu:a40:1")
+    gui.add_argument("--cpus", type=int, help="CPUs per task")
+    gui.add_argument("--memory", help="Memory, e.g. 32G")
+    gui.add_argument("--time", help="Walltime, e.g. 3h (default: cluster profile).")
+    gui.add_argument(
+        "--python-executable",
+        dest="python_executable",
+        help="Isaac Lab script to launch without --headless (default: create_empty.py).",
+    )
+    gui.add_argument(
+        "--resolution",
+        default="1920x1080x24",
+        help="Xvfb screen size (default: 1920x1080x24).",
+    )
+    gui.add_argument(
+        "--ready-timeout",
+        dest="ready_timeout",
+        type=float,
+        default=2400,
+        help="Seconds to wait for GUI_READY (default: 2400).",
+    )
+
     status = sub.add_parser("status", help="Show recent or running cluster jobs.")
     status.add_argument("job_id", nargs="?", help="Optional SLURM job id")
     logs = sub.add_parser("logs", help="Show the SLURM log for a job.")
@@ -191,6 +222,7 @@ _COMMAND_GERUNDS = {
     "build": "building",
     "push": "pushing",
     "run": "running",
+    "gui": "starting a GUI session",
     "status": "checking status",
     "logs": "fetching logs",
     "cancel": "canceling",
@@ -323,6 +355,21 @@ def _dispatch(args: argparse.Namespace, runner: CommandRunner, store: ConfigStor
             video_interval=args.video_interval,
             headless=args.headless,
             extra_args=args.extra_args,
+        )
+    if command == "gui":
+        return GuiCommand(runner, store).run(
+            cluster=args.cluster,
+            image_profile=args.image_profile,
+            partition=args.partition,
+            gpu=args.gpu,
+            gpus=args.gpus,
+            gres=args.gres,
+            cpus=args.cpus,
+            memory=args.memory,
+            time=args.time,
+            python_executable=args.python_executable,
+            resolution=args.resolution,
+            ready_timeout=args.ready_timeout,
         )
     if command == "status":
         return StatusCommand(runner, store).run(cluster=args.cluster, job_id=args.job_id)

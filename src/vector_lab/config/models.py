@@ -85,6 +85,13 @@ class JobRecord:
     video: bool = False
     python_executable: str | None = None
     train_args: list[str] = field(default_factory=list)
+    gui: bool = False
+    gui_status: str | None = None
+    hostname: str | None = None
+    private_ip: str | None = None
+    display: str | None = None
+    vnc_port: int | None = None
+    novnc_port: int | None = None
 
     @classmethod
     def create(
@@ -105,6 +112,13 @@ class JobRecord:
         video: bool = False,
         python_executable: str | None = None,
         train_args: list[str] | None = None,
+        gui: bool = False,
+        gui_status: str | None = None,
+        hostname: str | None = None,
+        private_ip: str | None = None,
+        display: str | None = None,
+        vnc_port: int | None = None,
+        novnc_port: int | None = None,
     ) -> JobRecord:
         return cls(
             job_id=job_id,
@@ -122,6 +136,13 @@ class JobRecord:
             video=video,
             python_executable=python_executable,
             train_args=list(train_args or []),
+            gui=gui,
+            gui_status=gui_status,
+            hostname=hostname,
+            private_ip=private_ip,
+            display=display,
+            vnc_port=vnc_port,
+            novnc_port=novnc_port,
         )
 
 

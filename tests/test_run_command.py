@@ -68,6 +68,26 @@ def test_missing_remote_container_clear_error(tmp_path: Path) -> None:
         assert "vector-lab deploy" in (exc.suggestion or "")
 
 
+def test_ssh_denial_is_not_reported_as_missing_container(tmp_path: Path) -> None:
+    repo = _isaaclab(tmp_path)
+    store = _store(tmp_path, repo)
+    fake = FakeExecute()
+    fake.add(
+        "test -f",
+        stdout="",
+        stderr="mollysun@bonecho.vectorinstitute.ai: Permission denied (keyboard-interactive).\n",
+        returncode=255,
+    )
+    runner = CommandRunner(execute=fake)
+    try:
+        RunCommand(runner, store, start_dir=repo).run(task="Isaac-Cartpole-v0")
+        assert False, "expected error"
+    except VectorLabError as exc:
+        assert exc.category == "ssh"
+        assert "vector-lab auth" in (exc.suggestion or "")
+        assert "container not deployed" not in str(exc)
+
+
 def test_shell_dry_run_uses_alias(tmp_path: Path, capsys) -> None:
     from vector_lab.commands.videos import ShellCommand
 

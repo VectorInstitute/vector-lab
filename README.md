@@ -184,6 +184,45 @@ vector-lab run --cluster killarney \
 Source is synchronized into a new scratch run directory on the selected
 cluster. The job uses the container deployed in step 3.
 
+### Interactive GUI
+
+`vector-lab gui` submits an Isaac Sim GUI session and waits until it is
+reachable in a browser. On the compute node the path is:
+
+```text
+Isaac Sim GUI → Xvfb → x11vnc on 127.0.0.1 → noVNC/websockify
+```
+
+Vector Lab then prints an SSH local forward and a localhost URL. It does not
+open a browser or keep the tunnel process running. This does not use Isaac Sim
+WebRTC or livestream.
+
+```bash
+vector-lab gui --cluster bonecho --time 3h
+```
+
+Leave the printed `ssh -N -L` command running, then open the printed
+`http://127.0.0.1:<port>/vnc.html?autoconnect=1&resize=remote` URL.
+
+The same job id works with `status`, `logs`, and `cancel`. After the session
+is ready, `vector-lab status --cluster <cluster> <job-id>` prints the tunnel
+again.
+
+The first GUI run builds x11vnc and noVNC 1.5.0 once under the cluster cache
+at `<cache>/gui/`. Later runs reuse that directory. The build does not use
+apt or sudo and does not rebuild the Isaac image. Job cleanup does not delete
+the cache.
+
+Xvfb uses the first free display in `:90`–`:119` at `1920x1080x24`
+(`--resolution` overrides the size). Raw VNC stays on localhost. Only the
+noVNC port is reachable from the login node, and only through the SSH tunnel.
+`--partition`, `--gpu`, `--cpus`, `--memory`, and `--time` match `run`. The
+default experience is `scripts/tutorials/00_sim/create_empty.py`.
+
+The compute node needs `Xvfb`, `xdpyinfo`, `curl`, and `websockify` on `PATH`.
+The one-time login-node build also needs `cmake`, a C compiler, and X11
+headers. This flow was exercised on Bonecho.
+
 Resource settings can be overridden per job:
 
 ```bash
@@ -237,6 +276,8 @@ vector-lab pull-video --cluster <cluster> --latest
 | Container missing remotely | `vector-lab deploy --cluster <cluster>` |
 | SLURM, scratch, or Apptainer issue | `vector-lab doctor --cluster <cluster>` |
 | Upload interrupted | Rerun `vector-lab deploy --cluster <cluster>` |
+| GUI startup failed | The error names the component and its log under the run's `logs/gui/` |
+| `Xvfb` or `websockify` missing | Those tools must already be on the compute node; GUI mode does not install them with apt |
 
 ## Architecture and lower-level commands
 
@@ -246,8 +287,8 @@ own home paths, scratch paths, modules, and GPU partitions without treating
 either cluster's settings as universal defaults.
 
 Most users need only `bootstrap`, `auth`, `onboard`, `doctor`, `deploy`, `run`,
-and the monitoring commands. Lower-level commands such as `init`, `setup`,
-`build`, `push`, and `shell` remain available.
+`gui`, and the monitoring commands. Lower-level commands such as `init`,
+`setup`, `build`, `push`, and `shell` remain available.
 
 Historical acceptance evidence is in
 [docs/KNOWN_GOOD.md](docs/KNOWN_GOOD.md). The clean-machine checklist is in

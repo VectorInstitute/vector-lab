@@ -9,6 +9,7 @@ from vector_lab.config.store import ConfigStore
 from vector_lab.errors import ConfigError, VectorLabError
 from vector_lab.exec import CommandRunner
 from vector_lab.images.build import require_cluster_profile
+from vector_lab.jobs.gui import format_saved_gui_connection
 from vector_lab.jobs.status import format_status, probe_job
 from vector_lab.ssh.session import SshSession
 
@@ -31,18 +32,18 @@ class StatusCommand:
     def run(self, *, cluster: str | None, job_id: str | None) -> int:
         profile, session = _session(self.runner, self.store, cluster)
         if job_id:
-            return self._one(session, job_id)
+            return self._one(session, job_id, profile.ssh_alias)
         jobs = sorted(self.store.load_jobs(), key=lambda j: j.submitted_at, reverse=True)
         if not jobs:
             self.runner.emit(f"No local job metadata for cluster {profile.name}.")
             return 0
         for job in jobs[:10]:
             self.runner.emit(f"— {job.job_id}  {job.task}  {job.submitted_at}")
-            self._one(session, job.job_id)
+            self._one(session, job.job_id, profile.ssh_alias)
             self.runner.emit("")
         return 0
 
-    def _one(self, session: SshSession, job_id: str) -> int:
+    def _one(self, session: SshSession, job_id: str, ssh_alias: str) -> int:
         if self.runner.dry_run:
             self.runner.emit(f"[dry-run] would query squeue/sacct for {job_id}")
             return 0
@@ -51,6 +52,10 @@ class StatusCommand:
             self.runner.emit(f"Job {job_id}: not found in squeue or sacct")
             return 1
         self.runner.emit(format_status(status))
+        extra = format_saved_gui_connection(self.store.find_job(job_id), ssh_alias=ssh_alias)
+        if extra:
+            self.runner.emit("")
+            self.runner.emit(extra)
         return 0
 
 

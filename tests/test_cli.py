@@ -114,6 +114,7 @@ def test_help_lists_commands() -> None:
         "build",
         "push",
         "run",
+        "gui",
         "status",
         "logs",
         "cancel",

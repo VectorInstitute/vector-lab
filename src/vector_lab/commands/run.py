@@ -121,6 +121,14 @@ class RunCommand:
             check=False,
         )
         if not probe.skipped and ("CONTAINER_OK" not in probe.stdout):
+            combined = f"{probe.stdout}\n{probe.stderr}"
+            if "Permission denied" in combined or "keyboard-interactive" in combined:
+                raise VectorLabError(
+                    "SSH to the cluster was denied before the container could be checked",
+                    category="ssh",
+                    stderr=probe.stderr,
+                    suggestion=f"The login session expired. Run: vector-lab auth {profile.ssh_alias}",
+                )
             raise VectorLabError(
                 f"container not deployed at {remote_tar}",
                 category="preflight",
