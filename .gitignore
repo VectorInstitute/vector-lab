@@ -8,6 +8,7 @@ dist/
 build/
 .venv/
 venv/
+.vector-sim/
 .vector-lab/
 .isaac-cluster/
 *.log

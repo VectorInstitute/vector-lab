@@ -1,11 +1,11 @@
-from vector_lab.cluster.slurm import (
+from vector_sim.cluster.slurm import (
     gpu_types_from_gres,
     gres_request,
     parse_scontrol_partitions,
     parse_sinfo_pipe_table,
     slurm_time,
 )
-from vector_lab.config.models import DefaultJob
+from vector_sim.config.models import DefaultJob
 
 
 def test_slurm_time_and_gres() -> None:

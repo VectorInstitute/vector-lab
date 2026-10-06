@@ -3,7 +3,7 @@
 Assume:
 
 - Ubuntu-like laptop
-- no existing `vector-lab` state
+- no existing `vector-sim` state
 - no Isaac Lab clone
 - a working Bonecho or Killarney account
 
@@ -12,19 +12,19 @@ intentionally manual.
 
 ## Procedure
 
-1. Clone vector-lab and `cd` into it.
+1. Clone vector-sim and `cd` into it.
 2. `source ./activate.sh` (no virtual environment or package install).
-3. Optionally add `source /absolute/path/to/vector-lab/activate.sh` to `~/.bashrc`.
-4. `vector-lab bootstrap` (and `bootstrap --install` only to print commands).
+3. Optionally add `source /absolute/path/to/vector-sim/activate.sh` to `~/.bashrc`.
+4. `vector-sim bootstrap` (and `bootstrap --install` only to print commands).
 5. Configure the cluster SSH alias in `~/.ssh/config` (tool will not write it).
-6. Authenticate / MFA: `vector-lab auth <cluster>`.
-7. `vector-lab onboard <cluster>`.
-8. `vector-lab doctor --cluster <cluster>` — expect `Overall: READY`.
-9. `vector-lab deploy --cluster <cluster>` — first time is expensive.
-10. `vector-lab smoke-test --cluster <cluster> --video`.
+6. Authenticate / MFA: `vector-sim auth <cluster>`.
+7. `vector-sim onboard <cluster>`.
+8. `vector-sim doctor --cluster <cluster>` — expect `Overall: READY`.
+9. `vector-sim deploy --cluster <cluster>` — first time is expensive.
+10. `vector-sim smoke-test --cluster <cluster> --video`.
 11. Verify job `COMPLETED` / ExitCode `0:0`
-12. Verify an MP4 exists with `vector-lab videos --cluster <cluster>`.
-13. Re-run `vector-lab onboard <cluster>` and `vector-lab deploy --cluster <cluster> --plan` and confirm SKIPPED / READY / checksum match.
+12. Verify an MP4 exists with `vector-sim videos --cluster <cluster>`.
+13. Re-run `vector-sim onboard <cluster>` and `vector-sim deploy --cluster <cluster> --plan` and confirm SKIPPED / READY / checksum match.
 
 ## Intentionally manual
 
@@ -32,7 +32,7 @@ intentionally manual.
 | --- | --- |
 | `sudo` package or `usermod -aG docker` | Privilege change; logout/login required |
 | Editing `~/.ssh/config` | Tool must not rewrite SSH config |
-| MFA / `vector-lab auth` | Keyboard-interactive; no secret storage |
+| MFA / `vector-sim auth` | Keyboard-interactive; no secret storage |
 | First `deploy` | Docker build + Apptainer conversion + multi-GB upload |
 
 ## Pass criteria

@@ -1,15 +1,15 @@
 import hashlib
 from pathlib import Path
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandResult, CommandRunner
-from vector_lab.images.conversion import ConversionSpec, LocalApptainerConversion
-from vector_lab.images.fingerprint import conversion_fingerprint, fingerprint_repo_build_inputs
-from vector_lab.images.naming import artifact_filename
-from vector_lab.images.push import PushPipeline
-from vector_lab.images.state import ImageArtifactState, ImageStateStore
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandResult, CommandRunner
+from vector_sim.images.conversion import ConversionSpec, LocalApptainerConversion
+from vector_sim.images.fingerprint import conversion_fingerprint, fingerprint_repo_build_inputs
+from vector_sim.images.naming import artifact_filename
+from vector_sim.images.push import PushPipeline
+from vector_sim.images.state import ImageArtifactState, ImageStateStore
 from tests.fakes.runner import FakeExecute
 
 

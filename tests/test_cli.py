@@ -1,11 +1,11 @@
-from vector_lab.cli import (
+from vector_sim.cli import (
     build_parser,
     format_command_banner,
     hoist_global_flags,
     parse_args,
     resolve_banner_cluster,
 )
-from vector_lab.config.store import ConfigStore
+from vector_sim.config.store import ConfigStore
 
 
 def test_parse_doctor_and_global_flags() -> None:
@@ -114,6 +114,7 @@ def test_help_lists_commands() -> None:
         "build",
         "push",
         "run",
+        "gui",
         "status",
         "logs",
         "cancel",
@@ -122,7 +123,7 @@ def test_help_lists_commands() -> None:
         "shell",
     ):
         assert name in help_text
-    assert "vector-lab" in help_text
+    assert "vector-sim" in help_text
     assert "isaac-cluster" not in help_text
 
 

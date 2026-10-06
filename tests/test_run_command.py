@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.commands.run import RunCommand
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.errors import VectorLabError
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.commands.run import RunCommand
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.errors import VectorSimError
 from tests.fakes.runner import FakeExecute
 
 
@@ -45,7 +45,7 @@ def test_run_dry_run_does_not_submit(tmp_path: Path) -> None:
     assert not any(c.category == "sbatch" for c in runner.calls)
     assert store.load_jobs() == []
     # dry-run must not stage wrappers into the Isaac Lab checkout
-    assert not (repo / ".vector-lab/generated/submit_job_slurm.sh").is_file()
+    assert not (repo / ".vector-sim/generated/submit_job_slurm.sh").is_file()
 
 
 def test_missing_remote_container_clear_error(tmp_path: Path) -> None:
@@ -63,13 +63,33 @@ def test_missing_remote_container_clear_error(tmp_path: Path) -> None:
     try:
         RunCommand(runner, store, start_dir=repo).run(task="Isaac-Cartpole-v0")
         assert False, "expected error"
-    except VectorLabError as exc:
+    except VectorSimError as exc:
         assert "container not deployed" in str(exc)
-        assert "vector-lab deploy" in (exc.suggestion or "")
+        assert "vector-sim deploy" in (exc.suggestion or "")
+
+
+def test_ssh_denial_is_not_reported_as_missing_container(tmp_path: Path) -> None:
+    repo = _isaaclab(tmp_path)
+    store = _store(tmp_path, repo)
+    fake = FakeExecute()
+    fake.add(
+        "test -f",
+        stdout="",
+        stderr="mollysun@bonecho.vectorinstitute.ai: Permission denied (keyboard-interactive).\n",
+        returncode=255,
+    )
+    runner = CommandRunner(execute=fake)
+    try:
+        RunCommand(runner, store, start_dir=repo).run(task="Isaac-Cartpole-v0")
+        assert False, "expected error"
+    except VectorSimError as exc:
+        assert exc.category == "ssh"
+        assert "vector-sim auth" in (exc.suggestion or "")
+        assert "container not deployed" not in str(exc)
 
 
 def test_shell_dry_run_uses_alias(tmp_path: Path, capsys) -> None:
-    from vector_lab.commands.videos import ShellCommand
+    from vector_sim.commands.videos import ShellCommand
 
     repo = _isaaclab(tmp_path)
     store = _store(tmp_path, repo)

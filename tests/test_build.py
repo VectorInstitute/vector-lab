@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.images.build import BuildPipeline
-from vector_lab.images.fingerprint import fingerprint_repo_build_inputs
-from vector_lab.images.naming import docker_image_ref
-from vector_lab.images.state import ImageArtifactState, ImageStateStore
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.images.build import BuildPipeline
+from vector_sim.images.fingerprint import fingerprint_repo_build_inputs
+from vector_sim.images.naming import docker_image_ref
+from vector_sim.images.state import ImageArtifactState, ImageStateStore
 from tests.fakes.runner import FakeExecute
 
 

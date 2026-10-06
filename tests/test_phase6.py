@@ -1,24 +1,24 @@
 from pathlib import Path
 
-from vector_lab.cli import build_parser, parse_args
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.commands.auth import AuthCommand
-from vector_lab.commands.bootstrap import BootstrapCommand
-from vector_lab.commands.deploy import DeployCommand
-from vector_lab.commands.doctor import Doctor, format_doctor_report
-from vector_lab.commands.onboard import OnboardCommand
-from vector_lab.commands.smoke import SmokeTestCommand, evaluate_job
-from vector_lab.compat import ISAACLAB_COMMIT, classify_isaaclab_commit, classify_tool_version
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.images.fingerprint import conversion_fingerprint, fingerprint_repo_build_inputs
-from vector_lab.images.naming import artifact_filename
-from vector_lab.images.state import ImageArtifactState, ImageStateStore
-from vector_lab.jobs.status import JobStatus
-from vector_lab.onboard.isaaclab import find_or_clone, resolve_existing
-from vector_lab.onboard.prereqs import STATUS_INSTALLED, inspect_platform, inspect_prereqs
-from vector_lab.ssh.multiplex import multiplex_from_ssh_g
+from vector_sim.cli import build_parser, parse_args
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.commands.auth import AuthCommand
+from vector_sim.commands.bootstrap import BootstrapCommand
+from vector_sim.commands.deploy import DeployCommand
+from vector_sim.commands.doctor import Doctor, format_doctor_report
+from vector_sim.commands.onboard import OnboardCommand
+from vector_sim.commands.smoke import SmokeTestCommand, evaluate_job
+from vector_sim.compat import ISAACLAB_COMMIT, classify_isaaclab_commit, classify_tool_version
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.images.fingerprint import conversion_fingerprint, fingerprint_repo_build_inputs
+from vector_sim.images.naming import artifact_filename
+from vector_sim.images.state import ImageArtifactState, ImageStateStore
+from vector_sim.jobs.status import JobStatus
+from vector_sim.onboard.isaaclab import find_or_clone, resolve_existing
+from vector_sim.onboard.prereqs import STATUS_INSTALLED, inspect_platform, inspect_prereqs
+from vector_sim.ssh.multiplex import multiplex_from_ssh_g
 from tests.fakes.runner import FakeExecute
 
 

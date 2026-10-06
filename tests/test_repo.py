@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.errors import DiscoveryError
-from vector_lab.local.repo import discover_isaac_lab, is_isaac_lab_repo
+from vector_sim.errors import DiscoveryError
+from vector_sim.local.repo import discover_isaac_lab, is_isaac_lab_repo
 
 
 def _touch_isaac_lab(root: Path) -> None:

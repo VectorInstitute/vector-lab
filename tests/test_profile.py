@@ -1,7 +1,7 @@
-from vector_lab.config.models import ClusterProfile, Fingerprints, bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.ssh.session import SshSession, wrap_login_shell
+from vector_sim.config.models import ClusterProfile, Fingerprints, bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.ssh.session import SshSession, wrap_login_shell
 from tests.fakes.runner import FakeExecute
 
 
@@ -64,7 +64,7 @@ def test_override_preservation(tmp_path) -> None:
 
 def test_jobs_json_roundtrip(tmp_path) -> None:
     store = ConfigStore(tmp_path)
-    from vector_lab.config.models import JobRecord
+    from vector_sim.config.models import JobRecord
 
     record = JobRecord.create(
         job_id="123",
