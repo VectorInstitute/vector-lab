@@ -17,8 +17,8 @@ the command runs.
 Clone the repository:
 
 ```bash
-git clone git@github.com:VectorInstitute/vector-lab.git
-cd vector-lab
+git clone git@github.com:VectorInstitute/vector-sim.git
+cd vector-sim
 ```
 
 Vector Sim does not require a virtual environment or `pip install`. Source the
