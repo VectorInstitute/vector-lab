@@ -6,18 +6,18 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.config.store import ConfigStore
-from vector_lab.errors import CommandError, VectorLabError
-from vector_lab.exec import CommandResult, CommandRunner
-from vector_lab.images.conversion import ConversionSpec, LocalApptainerConversion
-from vector_lab.images.state import ImageArtifactState, ImageStateStore
+from vector_sim.config.store import ConfigStore
+from vector_sim.errors import CommandError, VectorSimError
+from vector_sim.exec import CommandResult, CommandRunner
+from vector_sim.images.conversion import ConversionSpec, LocalApptainerConversion
+from vector_sim.images.state import ImageArtifactState, ImageStateStore
 
 
 def test_tar_receives_absolute_output_path_with_work_root_cwd(tmp_path: Path) -> None:
     """Relative project-style artifact paths must become absolute before tar cwd=work_root."""
     project = tmp_path / "proj"
-    work = project / ".vector-lab" / "work" / "base"
-    artifacts = project / ".vector-lab" / "artifacts"
+    work = project / ".vector-sim" / "work" / "base"
+    artifacts = project / ".vector-sim" / "artifacts"
     work.mkdir(parents=True)
     # Simulate a completed sandbox (no apptainer rebuild).
     (work / "isaac-lab-base.sif").mkdir()
@@ -42,11 +42,11 @@ def test_tar_receives_absolute_output_path_with_work_root_cwd(tmp_path: Path) ->
     runner = CommandRunner(execute=_exec)
     backend = LocalApptainerConversion(runner, work_root=work)
     # Intentionally relative to project root (the bug class from Step 3A).
-    relative_out = Path(".vector-lab") / "artifacts" / "isaac-lab-base-deadbeef.tar"
+    relative_out = Path(".vector-sim") / "artifacts" / "isaac-lab-base-deadbeef.tar"
     # Resolve relative to project by chdir simulation: pass path as project-relative Path
     # constructed under project, then pass as relative string-like Path from project cwd.
     # Use a path relative to tmp_path that would be wrong under work_root.
-    rel = Path(".vector-lab/artifacts/isaac-lab-base-deadbeef.tar")
+    rel = Path(".vector-sim/artifacts/isaac-lab-base-deadbeef.tar")
     # Create the relative path meaning from project: we pass Path that is not absolute.
     # package_sandbox resolves against process cwd, so run from project.
     import os
@@ -256,7 +256,7 @@ def test_convert_full_flow_uses_absolute_tar_path(tmp_path: Path) -> None:
 
 def test_package_missing_sandbox_errors(tmp_path: Path) -> None:
     backend = LocalApptainerConversion(CommandRunner(execute=lambda *a, **k: CommandResult(args=[], returncode=0)), work_root=tmp_path / "work")
-    with pytest.raises(VectorLabError, match="sandbox missing"):
+    with pytest.raises(VectorSimError, match="sandbox missing"):
         backend.package_sandbox(
             ConversionSpec(
                 docker_image="isaac-lab-base:latest",

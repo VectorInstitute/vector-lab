@@ -1,6 +1,6 @@
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.jobs.args import expand_train_args, resolve_job_spec
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.jobs.args import expand_train_args, resolve_job_spec
 
 
 def _profile():

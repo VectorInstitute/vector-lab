@@ -1,9 +1,9 @@
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.commands.setup import SetupCommand
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.jobs.generate import ENV_NAME, RUNNER_NAME, SUBMIT_NAME
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.commands.setup import SetupCommand
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.jobs.generate import ENV_NAME, RUNNER_NAME, SUBMIT_NAME
 from tests.fakes.runner import FakeExecute
 
 

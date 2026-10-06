@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 
-from vector_lab.exec import CommandResult
+from vector_sim.exec import CommandResult
 
 Matcher = Callable[[list[str]], bool]
 

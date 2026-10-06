@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -e
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd)"
+PYTHON="${VECTOR_SIM_PYTHON:-python3}"
+
+if ! command -v "$PYTHON" >/dev/null 2>&1; then
+    echo "error: $PYTHON is not installed or not on PATH" >&2
+    exit 1
+fi
+
+if ! "$PYTHON" -c "import yaml" >/dev/null 2>&1; then
+    echo "error: PyYAML is required by vector-sim" >&2
+    echo "next: install the Ubuntu package: sudo apt install python3-yaml" >&2
+    exit 1
+fi
+
+export PYTHONPATH="${ROOT}/src${PYTHONPATH:+:${PYTHONPATH}}"
+exec "$PYTHON" -m vector_sim.cli "$@"

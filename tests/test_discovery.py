@@ -1,7 +1,7 @@
 """Discovery must work on clusters that expose nothing to a non-login shell."""
 
-from vector_lab.cluster.detect import candidate_scratch_dirs
-from vector_lab.cluster.discover import (
+from vector_sim.cluster.detect import candidate_scratch_dirs
+from vector_sim.cluster.discover import (
     discover_apptainer,
     discover_remote_shell,
     discover_scratch,
@@ -9,10 +9,10 @@ from vector_lab.cluster.discover import (
     parse_module_names,
     resolve_remote_shell,
 )
-from vector_lab.cluster.slurm import gpu_capacity, select_default_partition
-from vector_lab.config.models import ClusterProfile, GpuPartition
-from vector_lab.exec import CommandRunner
-from vector_lab.ssh.session import SshSession
+from vector_sim.cluster.slurm import gpu_capacity, select_default_partition
+from vector_sim.config.models import ClusterProfile, GpuPartition
+from vector_sim.exec import CommandRunner
+from vector_sim.ssh.session import SshSession
 from tests.fakes.runner import FakeExecute
 
 

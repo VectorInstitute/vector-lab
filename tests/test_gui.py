@@ -7,15 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.cli import parse_args
-from vector_lab.commands.gui import GuiCommand
-from vector_lab.config.models import JobRecord, bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.errors import VectorLabError
-from vector_lab.exec import CommandRunner
-from vector_lab.jobs.generate import GUI_BOOTSTRAP_NAME, generate_runtime
-from vector_lab.jobs.gui import (
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.cli import parse_args
+from vector_sim.commands.gui import GuiCommand
+from vector_sim.config.models import JobRecord, bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.errors import VectorSimError
+from vector_sim.exec import CommandRunner
+from vector_sim.jobs.generate import GUI_BOOTSTRAP_NAME, generate_runtime
+from vector_sim.jobs.gui import (
     DISPLAY_MAX,
     DISPLAY_MIN,
     NOVNC_PORT_MAX,
@@ -114,7 +114,7 @@ def test_headless_wrappers_unchanged_and_gui_adds_startup() -> None:
     assert "Xvfb" not in headless.run_singularity
     assert "x11vnc" not in headless.run_singularity
     assert "websockify" not in headless.run_singularity
-    assert "VECTOR_LAB_GUI" not in headless.submit_job_slurm
+    assert "VECTOR_SIM_GUI" not in headless.submit_job_slurm
     assert GUI_BOOTSTRAP_NAME not in headless.as_dict()
     assert "scripts/reinforcement_learning/rsl_rl/train.py" in headless.env_cluster
     assert "#SBATCH --job-name=\"training-" in headless.submit_job_slurm
@@ -137,7 +137,7 @@ def test_headless_wrappers_unchanged_and_gui_adds_startup() -> None:
     assert "47998" not in script
     assert script.index("CUDA_MICROTEST PASS") < script.index("/tmp/.X11-unix:/tmp/.X11-unix")
     assert script.index("/tmp/.X11-unix:/tmp/.X11-unix") < script.index("-localhost")
-    assert "VECTOR_LAB_GUI=1" in gui.submit_job_slurm
+    assert "VECTOR_SIM_GUI=1" in gui.submit_job_slurm
     assert "module load apptainer" in gui.submit_job_slurm
     assert "bash -l -c 'sbatch < job.sh'" in gui.submit_job_slurm
     assert "run_singularity.sh" in gui.submit_job_slurm
@@ -251,7 +251,7 @@ def test_gui_dry_run_does_not_submit(tmp_path: Path) -> None:
     assert fake.calls == []
     assert not any(call.category == "sbatch" for call in runner.calls)
     assert store.load_jobs() == []
-    assert not (repo / ".vector-lab/generated/run_singularity.sh").is_file()
+    assert not (repo / ".vector-sim/generated/run_singularity.sh").is_file()
 
 
 def test_gui_command_prints_tunnel_when_ready(tmp_path: Path, capsys) -> None:
@@ -306,7 +306,7 @@ def test_gui_command_reports_component_failure(tmp_path: Path) -> None:
         ),
     )
     runner = CommandRunner(execute=fake)
-    with pytest.raises(VectorLabError) as caught:
+    with pytest.raises(VectorSimError) as caught:
         GuiCommand(runner, store, start_dir=repo, sleep=lambda _s: None).run(
             ready_timeout=30,
             poll_interval=0,
@@ -328,7 +328,7 @@ def test_gui_command_times_out_with_log_path(tmp_path: Path) -> None:
     fake.add("submit_job_slurm.sh", stdout="Submitted batch job 88\n")
     fake.add("squeue", stdout="88|gui|RUNNING|00:01:00|a40_b1|bn070\n")
     runner = CommandRunner(execute=fake)
-    with pytest.raises(VectorLabError) as caught:
+    with pytest.raises(VectorSimError) as caught:
         GuiCommand(runner, store, start_dir=repo, sleep=lambda _s: None).run(
             ready_timeout=0,
             poll_interval=0,

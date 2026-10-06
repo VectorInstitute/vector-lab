@@ -1,8 +1,8 @@
-from vector_lab.cluster.detect import infer_home, infer_scratch, parse_env_assignments
-from vector_lab.commands.doctor import Doctor, Severity, classify_result, format_doctor_report
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
+from vector_sim.cluster.detect import infer_home, infer_scratch, parse_env_assignments
+from vector_sim.commands.doctor import Doctor, Severity, classify_result, format_doctor_report
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
 from tests.fakes.runner import FakeExecute
 
 

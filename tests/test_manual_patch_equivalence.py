@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.config.models import bonecho_defaults
-from vector_lab.jobs.generate import generate_runtime
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.config.models import bonecho_defaults
+from vector_sim.jobs.generate import generate_runtime
 
 _default_lab = Path(__file__).resolve().parents[2] / "IsaacLab"
 PATCHED = Path(os.environ.get("ISAACLAB_PATH", str(_default_lab))) / "docker" / "cluster"

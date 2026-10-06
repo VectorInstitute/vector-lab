@@ -2,10 +2,10 @@ from pathlib import Path
 
 import pytest
 
-from vector_lab.images.naming import safe_rmtree
-from vector_lab.images.preflight import apptainer_preflight, disk_preflight
-from vector_lab.local.docker_util import DOCKER_ACCESS_HINT, DOCKER_MISSING_HINT, fakeroot_primary_group_problem, permission_denied
-from vector_lab.exec import CommandRunner
+from vector_sim.images.naming import safe_rmtree
+from vector_sim.images.preflight import apptainer_preflight, disk_preflight
+from vector_sim.local.docker_util import DOCKER_ACCESS_HINT, DOCKER_MISSING_HINT, fakeroot_primary_group_problem, permission_denied
+from vector_sim.exec import CommandRunner
 from tests.fakes.runner import FakeExecute
 
 

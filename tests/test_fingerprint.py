@@ -1,12 +1,12 @@
 from pathlib import Path
 
-from vector_lab.images.fingerprint import (
+from vector_sim.images.fingerprint import (
     collect_build_input_files,
     conversion_fingerprint,
     fingerprint_repo_build_inputs,
     parse_dockerfile_copy_sources,
 )
-from vector_lab.images.naming import parse_docker_inspect_digest
+from vector_sim.images.naming import parse_docker_inspect_digest
 
 
 def _docker_tree(root: Path) -> None:

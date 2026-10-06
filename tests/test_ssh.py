@@ -1,4 +1,4 @@
-from vector_lab.ssh.session import parse_ssh_g, resolved_ssh_from_g, wrap_login_shell
+from vector_sim.ssh.session import parse_ssh_g, resolved_ssh_from_g, wrap_login_shell
 
 
 SSH_G_SAMPLE = """\

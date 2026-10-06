@@ -1,15 +1,15 @@
 from pathlib import Path
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.config.models import JobRecord, bonecho_defaults
-from vector_lab.config.store import ConfigStore
-from vector_lab.exec import CommandRunner
-from vector_lab.jobs.generate import ENV_NAME, RUNNER_NAME, SUBMIT_NAME, generate_runtime
-from vector_lab.jobs.status import parse_sacct_line, parse_squeue_line
-from vector_lab.jobs.submit import parse_sbatch_job_id
-from vector_lab.jobs.sync import RSYNC_EXCLUDES, remote_submit_path, rsync_source_args, stage_generated_into_repo
-from vector_lab.jobs.videos import parse_find_videos, pull_video_args
-from vector_lab.ssh.session import wrap_login_shell
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.config.models import JobRecord, bonecho_defaults
+from vector_sim.config.store import ConfigStore
+from vector_sim.exec import CommandRunner
+from vector_sim.jobs.generate import ENV_NAME, RUNNER_NAME, SUBMIT_NAME, generate_runtime
+from vector_sim.jobs.status import parse_sacct_line, parse_squeue_line
+from vector_sim.jobs.submit import parse_sbatch_job_id
+from vector_sim.jobs.sync import RSYNC_EXCLUDES, remote_submit_path, rsync_source_args, stage_generated_into_repo
+from vector_sim.jobs.videos import parse_find_videos, pull_video_args
+from vector_sim.ssh.session import wrap_login_shell
 
 
 def _profile():
@@ -34,7 +34,7 @@ def test_rsync_excludes_and_uses_alias() -> None:
     assert ".git/" in joined
     assert ".venv/" in joined
     assert "__pycache__/" in joined
-    assert ".vector-lab/artifacts/" in joined
+    assert ".vector-sim/artifacts/" in joined
     for pattern in RSYNC_EXCLUDES[:5]:
         assert pattern in joined
 
@@ -52,7 +52,7 @@ def test_generated_wrappers_staged_not_upstream(tmp_path: Path) -> None:
     assert "module load apptainer" in submit
     assert 'bash "$SCRIPT_DIR/run_singularity.sh"' in submit
     assert remote_submit_path("/scratch/alice/isaaclab_1").endswith(
-        ".vector-lab/generated/submit_job_slurm.sh"
+        ".vector-sim/generated/submit_job_slurm.sh"
     )
     assert "/docker/cluster/submit_job_slurm.sh" not in remote_submit_path("/scratch/alice/isaaclab_1")
 

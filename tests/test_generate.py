@@ -1,9 +1,9 @@
 import re
 
-from vector_lab.cluster.adapters import VectorSlurmAdapter
-from vector_lab.cluster.slurm import parse_sinfo_pipe_table, slurm_time
-from vector_lab.config.models import ClusterProfile, SchedulerConfig, bonecho_defaults
-from vector_lab.jobs.generate import generate_runtime
+from vector_sim.cluster.adapters import VectorSlurmAdapter
+from vector_sim.cluster.slurm import parse_sinfo_pipe_table, slurm_time
+from vector_sim.config.models import ClusterProfile, SchedulerConfig, bonecho_defaults
+from vector_sim.jobs.generate import generate_runtime
 
 
 def _writable_sandbox(text: str) -> bool:
@@ -71,8 +71,8 @@ def test_generated_bonecho_env_uses_alias_and_derived_paths() -> None:
 
 
 def test_env_cluster_rejects_username_placeholder() -> None:
-    from vector_lab.errors import ConfigError
-    from vector_lab.jobs.generate import render_env_cluster
+    from vector_sim.errors import ConfigError
+    from vector_sim.jobs.generate import render_env_cluster
 
     profile = bonecho_defaults()
     profile.remote_user = "<user>"

@@ -1,5 +1,5 @@
-from vector_lab.errors import CommandError
-from vector_lab.exec import CommandRunner
+from vector_sim.errors import CommandError
+from vector_sim.exec import CommandRunner
 from tests.fakes.runner import FakeExecute
 
 

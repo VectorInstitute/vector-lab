@@ -1,17 +1,17 @@
 from pathlib import Path
 
-from vector_lab.cluster.adapters import (
+from vector_sim.cluster.adapters import (
     CLUSTER_TYPE_SLURM,
     CLUSTER_TYPE_VECTOR_SLURM,
     SlurmAdapter,
     VectorSlurmAdapter,
     adapter_for,
 )
-from vector_lab.commands.init import build_initial_profile
-from vector_lab.config.models import BUILTIN_PROFILES, ClusterProfile, bonecho_defaults
-from vector_lab.exec import CommandRunner
-from vector_lab.images.conversion import ConversionBackend, LocalApptainerConversion, RemoteConversion
-from vector_lab.jobs.generate import generate_runtime
+from vector_sim.commands.init import build_initial_profile
+from vector_sim.config.models import BUILTIN_PROFILES, ClusterProfile, bonecho_defaults
+from vector_sim.exec import CommandRunner
+from vector_sim.images.conversion import ConversionBackend, LocalApptainerConversion, RemoteConversion
+from vector_sim.jobs.generate import generate_runtime
 
 
 def test_conversion_backends_are_pluggable(tmp_path: Path) -> None:
@@ -99,7 +99,7 @@ def test_vector_slurm_adapter_owns_apptainer_and_path_defaults() -> None:
 
 
 def test_legacy_profile_yaml_fills_missing_cluster_type_from_builtin(tmp_path) -> None:
-    from vector_lab.config.store import ConfigStore
+    from vector_sim.config.store import ConfigStore
 
     store = ConfigStore(tmp_path)
     # Simulate a pre-cluster_type bonecho.yaml (key absent on disk).
