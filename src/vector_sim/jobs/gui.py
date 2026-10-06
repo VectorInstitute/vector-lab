@@ -551,7 +551,10 @@ setup_directories() {
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/cache/computecache" \
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/logs" \
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/data" \
-        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/documents"; do
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/documents" \
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/kit-data" \
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/kit-logs" \
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/gui/tmp"; do
         if [ ! -d "$dir" ]; then
             mkdir -p "$dir"
         fi
@@ -560,7 +563,6 @@ setup_directories() {
 
 echo "GUI_STAGE=extract"
 setup_directories
-cp -r "$CLUSTER_ISAAC_SIM_CACHE_DIR" "$TMPDIR"
 mkdir -p "$CLUSTER_ISAACLAB_DIR/logs"
 touch "$CLUSTER_ISAACLAB_DIR/logs/.keep"
 cp -r "$RUN_DIR" "$TMPDIR"
