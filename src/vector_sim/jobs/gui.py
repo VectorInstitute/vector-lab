@@ -554,7 +554,8 @@ setup_directories() {
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/documents" \
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/kit-data" \
         "${CLUSTER_ISAAC_SIM_CACHE_DIR}/kit-logs" \
-        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/gui/tmp"; do
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/gui/tmp" \
+        "${CLUSTER_ISAAC_SIM_CACHE_DIR}/container-home/.local/share/ov/data"; do
         if [ ! -d "$dir" ]; then
             mkdir -p "$dir"
         fi

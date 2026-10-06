@@ -152,6 +152,11 @@ def test_headless_wrappers_unchanged_and_gui_adds_startup() -> None:
         in script
     )
     assert "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/gui/tmp:/tmp:rw" in script
+    assert "--home $CLUSTER_ISAAC_SIM_CACHE_DIR/container-home" in script
+    assert (
+        "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/data:$HOME/.local/share/ov/data:rw"
+        in script
+    )
     assert 'cp -r "$CLUSTER_ISAAC_SIM_CACHE_DIR" "$TMPDIR"' not in script
     assert GUI_BOOTSTRAP_NAME in gui.as_dict()
 

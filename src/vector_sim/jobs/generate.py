@@ -210,8 +210,13 @@ def container_exec_parts(
         for rel, dest in PERSISTENT_CACHE_BINDS
     ]
     if persistent_cache:
+        # Apptainer runs as the host user, so Kit unpacks extensions under
+        # $HOME, not the image's /root. --containall keeps that home on a
+        # small tmpfs unless --home points it at scratch.
+        flags = f"{flags} --home $CLUSTER_ISAAC_SIM_CACHE_DIR/container-home".strip()
         bind_lines.extend(
             (
+                "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/data:$HOME/.local/share/ov/data:rw \\",
                 "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/kit-data:/isaac-sim/kit/data:rw \\",
                 "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/kit-logs:/isaac-sim/kit/logs:rw \\",
                 "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/gui/tmp:/tmp:rw \\",
