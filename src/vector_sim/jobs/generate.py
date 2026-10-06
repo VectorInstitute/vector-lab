@@ -163,6 +163,14 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" >/dev/null 2>&1 && pwd )"
 
+# Build the optional runner tail only when arguments are present. Quoted
+# "${{@:3}}" expands to one empty argument on the shell used by Bonecho when
+# the GUI command submits only RUN_DIR and CONTAINER.
+runner_args=""
+if [ "$#" -gt 2 ]; then
+    printf -v runner_args ' %q' "${{@:3}}"
+fi
+
 cat <<EOT > job.sh
 {shebang}
 
@@ -173,7 +181,7 @@ cat <<EOT > job.sh
 {output_line}#SBATCH --job-name="{job_label}-$(date +"%Y-%m-%dT%H:%M")"
 
 {module_lines}
-{gui_note}bash "$SCRIPT_DIR/{RUNNER_NAME}" "$1" "$2" "${{@:3}}"
+{gui_note}bash "$SCRIPT_DIR/{RUNNER_NAME}" "$1" "$2"$runner_args
 EOT
 
 {sbatch}
