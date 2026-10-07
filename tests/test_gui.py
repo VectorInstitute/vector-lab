@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -31,6 +32,7 @@ from vector_sim.jobs.gui import (
     gui_cache_paths,
     isaac_gui_log_ok,
     parse_gui_result,
+    render_gui_bootstrap_script,
     select_free_display,
     select_free_port,
 )
@@ -188,6 +190,30 @@ def test_gui_cache_layout_and_bootstrap_reuses_it() -> None:
     assert "sudo " not in bootstrap
     assert "LibVNCServer-0.9.15" in bootstrap
     assert "x11vnc-0.9.17" in bootstrap
+    assert "reclaimed an interrupted GUI runtime bootstrap" in bootstrap
+    assert 'rm -rf "$SRC" "$PREFIX" "$NOVNC"' not in bootstrap
+    assert 'CMAKE_INSTALL_PREFIX="$STAGE_PREFIX"' in bootstrap
+
+
+def test_bootstrap_recognizes_matching_cache_version(tmp_path: Path) -> None:
+    paths = gui_cache_paths(str(tmp_path))
+    x11vnc = Path(paths.x11vnc) / "bin/x11vnc"
+    x11vnc.parent.mkdir(parents=True)
+    x11vnc.touch(mode=0o755)
+    novnc = Path(paths.novnc) / "vnc.html"
+    novnc.parent.mkdir(parents=True)
+    novnc.touch()
+    Path(paths.version_file).write_text(paths.version_text)
+
+    result = subprocess.run(
+        ["bash", "-c", render_gui_bootstrap_script(str(tmp_path))],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "GUI_RUNTIME_REUSED"
 
 
 def test_cleanup_trap_kills_gui_processes_and_keeps_cache() -> None:
