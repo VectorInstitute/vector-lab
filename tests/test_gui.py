@@ -143,6 +143,21 @@ def test_headless_wrappers_unchanged_and_gui_adds_startup() -> None:
     assert "run_singularity.sh" in gui.submit_job_slurm
     assert "scripts/tutorials/00_sim/create_empty.py" in gui.env_cluster
     assert "--headless" not in script
+    assert (
+        "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/kit-data:/isaac-sim/kit/data:rw"
+        in script
+    )
+    assert (
+        "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/data:${DOCKER_USER_HOME}/.local/share/ov/data:rw"
+        in script
+    )
+    assert "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/gui/tmp:/tmp:rw" in script
+    assert "--home $CLUSTER_ISAAC_SIM_CACHE_DIR/container-home" in script
+    assert (
+        "-B $CLUSTER_ISAAC_SIM_CACHE_DIR/data:$HOME/.local/share/ov/data:rw"
+        in script
+    )
+    assert 'cp -r "$CLUSTER_ISAAC_SIM_CACHE_DIR" "$TMPDIR"' not in script
     assert GUI_BOOTSTRAP_NAME in gui.as_dict()
 
 

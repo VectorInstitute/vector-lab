@@ -1,4 +1,7 @@
+import os
 import re
+import subprocess
+from pathlib import Path
 
 from vector_sim.cluster.adapters import VectorSlurmAdapter
 from vector_sim.cluster.slurm import parse_sinfo_pipe_table, slurm_time
@@ -32,6 +35,38 @@ def test_generated_bonecho_submit_matches_working_behavior() -> None:
     assert slurm_time("1h") in submit
     assert "run_singularity.sh" in submit
     assert "docker/cluster/run_singularity.sh" not in submit
+
+
+def test_submit_wrapper_omits_empty_runner_argument(tmp_path: Path) -> None:
+    profile = ClusterProfile(name="test", ssh_alias="test")
+    submit = generate_runtime(profile).submit_job_slurm
+    submit_path = tmp_path / "submit_job_slurm.sh"
+    submit_path.write_text(submit)
+
+    fake_bin = tmp_path / "bin"
+    fake_bin.mkdir()
+    captured = tmp_path / "captured-job.sh"
+    sbatch = fake_bin / "sbatch"
+    sbatch.write_text('#!/usr/bin/env bash\ncat > "$CAPTURED_JOB"\n')
+    sbatch.chmod(0o755)
+    env = {
+        **os.environ,
+        "PATH": f"{fake_bin}:{os.environ['PATH']}",
+        "CAPTURED_JOB": str(captured),
+    }
+
+    subprocess.run(
+        ["bash", str(submit_path), "/scratch/alice/run", "isaac-lab-base"],
+        cwd=tmp_path,
+        env=env,
+        check=True,
+    )
+
+    runner_line = next(
+        line for line in captured.read_text().splitlines() if "run_singularity.sh" in line
+    )
+    assert runner_line.endswith('"/scratch/alice/run" "isaac-lab-base"')
+    assert '""' not in runner_line
 
 
 def test_generated_bonecho_runner_apptainer_flags() -> None:

@@ -163,6 +163,14 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${{BASH_SOURCE[0]}}" )" >/dev/null 2>&1 && pwd )"
 
+# Build the optional runner tail only when arguments are present. Quoted
+# "${{@:3}}" expands to one empty argument on the shell used by Bonecho when
+# the GUI command submits only RUN_DIR and CONTAINER.
+runner_args=""
+if [ "$#" -gt 2 ]; then
+    printf -v runner_args ' %q' "${{@:3}}"
+fi
+
 cat <<EOT > job.sh
 {shebang}
 
@@ -173,7 +181,7 @@ cat <<EOT > job.sh
 {output_line}#SBATCH --job-name="{job_label}-$(date +"%Y-%m-%dT%H:%M")"
 
 {module_lines}
-{gui_note}bash "$SCRIPT_DIR/{RUNNER_NAME}" "$1" "$2" "${{@:3}}"
+{gui_note}bash "$SCRIPT_DIR/{RUNNER_NAME}" "$1" "$2"$runner_args
 EOT
 
 {sbatch}
@@ -186,14 +194,34 @@ def apptainer_exec_flag_string(profile: ClusterProfile) -> str:
     return " ".join(flags)
 
 
-def container_exec_parts(profile: ClusterProfile) -> tuple[str, str, str]:
+def container_exec_parts(
+    profile: ClusterProfile, *, persistent_cache: bool = False
+) -> tuple[str, str, str]:
     """Apptainer command, cache bind block, and exec flags shared with the GUI runner."""
     command = profile.apptainer.command or "singularity"
     flags = apptainer_exec_flag_string(profile)
+    cache_root = (
+        "$CLUSTER_ISAAC_SIM_CACHE_DIR"
+        if persistent_cache
+        else "$TMPDIR/docker-isaac-sim"
+    )
     bind_lines = [
-        f"    -B $TMPDIR/docker-isaac-sim/{rel}:{dest}:rw \\"
+        f"    -B {cache_root}/{rel}:{dest}:rw \\"
         for rel, dest in PERSISTENT_CACHE_BINDS
     ]
+    if persistent_cache:
+        # Apptainer runs as the host user, so Kit unpacks extensions under
+        # $HOME, not the image's /root. --containall keeps that home on a
+        # small tmpfs unless --home points it at scratch.
+        flags = f"{flags} --home $CLUSTER_ISAAC_SIM_CACHE_DIR/container-home".strip()
+        bind_lines.extend(
+            (
+                "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/data:$HOME/.local/share/ov/data:rw \\",
+                "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/kit-data:/isaac-sim/kit/data:rw \\",
+                "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/kit-logs:/isaac-sim/kit/logs:rw \\",
+                "    -B $CLUSTER_ISAAC_SIM_CACHE_DIR/gui/tmp:/tmp:rw \\",
+            )
+        )
     return command, "\n".join(bind_lines), flags
 
 
@@ -288,7 +316,9 @@ def generate_runtime(
     runner = render_run_singularity(profile)
     bootstrap = None
     if gui:
-        command, bind_block, exec_flags = container_exec_parts(profile)
+        command, bind_block, exec_flags = container_exec_parts(
+            profile, persistent_cache=True
+        )
         launch = GuiLaunch(resolution=resolution) if resolution else GuiLaunch()
         runner = render_gui_runner_script(
             command=command,
